@@ -6,6 +6,7 @@ using Atk.DTOs.Supplier;
 using Atk.Services.Implementations;
 using Atk.Services.Interfaces;
 using Azure.Messaging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -13,6 +14,7 @@ namespace Atk.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")] 
     public class SupplierController : ControllerBase
     {
         private readonly ISupplierServices _service;

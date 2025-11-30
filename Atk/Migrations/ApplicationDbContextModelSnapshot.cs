@@ -136,6 +136,23 @@ namespace Atk.Migrations
                     b.ToTable("BarangMasuks");
                 });
 
+            modelBuilder.Entity("Atk.Models.Divisi", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nama")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Divisis");
+                });
+
             modelBuilder.Entity("Atk.Models.Payment", b =>
                 {
                     b.Property<int>("Id")
@@ -144,12 +161,18 @@ namespace Atk.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("BuktiTransferFilePath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Keterangan")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
@@ -301,10 +324,17 @@ namespace Atk.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("DivisiId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Nama")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NamaDivisi")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -323,6 +353,8 @@ namespace Atk.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DivisiId");
 
                     b.ToTable("Users");
                 });
@@ -405,6 +437,13 @@ namespace Atk.Migrations
                     b.Navigation("Supplier");
                 });
 
+            modelBuilder.Entity("User", b =>
+                {
+                    b.HasOne("Atk.Models.Divisi", null)
+                        .WithMany("Users")
+                        .HasForeignKey("DivisiId");
+                });
+
             modelBuilder.Entity("Atk.Models.Barang", b =>
                 {
                     b.Navigation("BarangKeluars");
@@ -412,6 +451,11 @@ namespace Atk.Migrations
                     b.Navigation("BarangMasuks");
 
                     b.Navigation("PermintaanBarangs");
+                });
+
+            modelBuilder.Entity("Atk.Models.Divisi", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Atk.Models.PermintaanBarang", b =>

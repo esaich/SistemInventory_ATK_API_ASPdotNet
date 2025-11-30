@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Atk.DTOs.Pengadaan;
 using Atk.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.AspNetCore.RateLimiting;
@@ -12,6 +13,7 @@ namespace Atk.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")] 
     public class PengadaanController : ControllerBase
     {
         private readonly IPengadaan _service;

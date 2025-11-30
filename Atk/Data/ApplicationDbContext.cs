@@ -21,6 +21,8 @@ public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
     public DbSet<BarangKeluar> BarangKeluars { get; set; }  
     public DbSet<PermintaanBarang> PermintaanBarangs { get; set; }  
     public DbSet<User> Users { get; set; }  
+    public DbSet<Divisi> Divisis { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)  
     {  

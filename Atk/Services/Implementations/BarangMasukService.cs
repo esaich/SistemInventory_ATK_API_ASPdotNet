@@ -13,9 +13,12 @@ namespace Atk.Services.Implementations
     public class BarangMasukService : IBarangMasuk
     {
         private readonly ApplicationDbContext _context;
-        public BarangMasukService(ApplicationDbContext context)
+        private readonly IPayment _paymentService; // dependency PaymentService
+
+        public BarangMasukService(ApplicationDbContext context, IPayment paymentService)
         {
             _context = context;
+            _paymentService = paymentService;
         }
 
         public async Task<BarangMasukResponseDto> CreateAsync(BarangMasukCreateDto dto)
@@ -38,15 +41,20 @@ namespace Atk.Services.Implementations
 
             await _context.BarangMasuks.AddAsync(entity);
 
-            // **PERBAIKAN**: update stok pada tabel Barangs, bukan BarangMasuks
             var barang = await _context.Barangs.FindAsync(dto.BarangId);
             if (barang == null)
-            {
-                // roll back add by not saving and throw
                 throw new KeyNotFoundException($"Barang dengan id {dto.BarangId} tidak ditemukan.");
-            }
 
             barang.Stok += dto.JumlahMasuk;
+
+            // Hitung subtotal untuk payment
+            decimal subtotal = dto.JumlahMasuk * dto.HargaSatuan;
+
+            // Update atau buat payment otomatis
+            if (dto.SupplierId.HasValue)
+            {
+                await _paymentService.AddOrUpdatePaymentFromBarangMasukAsync(dto.SupplierId.Value, dto.TanggalMasuk, subtotal);
+            }
 
             await _context.SaveChangesAsync();
 
@@ -69,7 +77,6 @@ namespace Atk.Services.Implementations
             var result = new List<BarangMasukResponseDto>();
             var now = DateTime.Now;
 
-            // Gunakan transaction supaya atomic
             await using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
@@ -95,13 +102,17 @@ namespace Atk.Services.Implementations
                     };
 
                     await _context.BarangMasuks.AddAsync(entity);
-
-                    // update stok
                     barang.Stok += dto.JumlahMasuk;
+
+                    decimal subtotal = dto.JumlahMasuk * dto.HargaSatuan;
+                    if (dto.SupplierId.HasValue)
+                    {
+                        await _paymentService.AddOrUpdatePaymentFromBarangMasukAsync(dto.SupplierId.Value, dto.TanggalMasuk, subtotal);
+                    }
 
                     result.Add(new BarangMasukResponseDto
                     {
-                        Id = entity.Id, // note: id akan terisi setelah SaveChanges
+                        Id = entity.Id,
                         BarangId = entity.BarangId,
                         SupplierId = entity.SupplierId,
                         JumlahMasuk = entity.JumlahMasuk,
@@ -112,29 +123,7 @@ namespace Atk.Services.Implementations
                 }
 
                 await _context.SaveChangesAsync();
-
-                // after SaveChanges, adjust Ids in result (because entity.Id assigned after save)
-                // reload newly added entries to get their Ids (or update by reading last inserted)
-                // simplest: fetch created rows by createdAt timestamp range (ok for small sets)
                 await transaction.CommitAsync();
-
-                // Refresh Ids by querying entries createdAt == now (best-effort)
-                var createdList = await _context.BarangMasuks
-                    .Where(b => b.CreatedAt == now)
-                    .ToListAsync();
-
-                // map back Ids to result items (match by BarangId, JumlahMasuk, HargaSatuan, CreatedAt)
-                foreach (var r in result)
-                {
-                    var match = createdList.FirstOrDefault(c =>
-                        c.BarangId == r.BarangId &&
-                        c.JumlahMasuk == r.JumlahMasuk &&
-                        c.HargaSatuan == r.HargaSatuan &&
-                        c.CreatedAt == r.CreatedAt);
-
-                    if (match != null)
-                        r.Id = match.Id;
-                }
 
                 return result;
             }
@@ -188,14 +177,12 @@ namespace Atk.Services.Implementations
             var entity = await _context.BarangMasuks.FirstOrDefaultAsync(x => x.Id == id);
             if (entity == null) return false;
 
-            // adjust stok: kurangi stok lama lalu tambah stok baru jika BarangId sama
+            var oldSubtotal = entity.JumlahMasuk * entity.HargaSatuan;
+
             var oldBarang = await _context.Barangs.FindAsync(entity.BarangId);
             if (oldBarang != null)
-            {
                 oldBarang.Stok -= entity.JumlahMasuk;
-            }
 
-            // apply update
             entity.BarangId = dto.BarangId;
             entity.SupplierId = dto.SupplierId;
             entity.JumlahMasuk = dto.JumlahMasuk;
@@ -205,8 +192,19 @@ namespace Atk.Services.Implementations
 
             var newBarang = await _context.Barangs.FindAsync(dto.BarangId);
             if (newBarang != null)
-            {
                 newBarang.Stok += dto.JumlahMasuk;
+
+            var newSubtotal = dto.JumlahMasuk * dto.HargaSatuan;
+
+            // Update payment
+            if (entity.SupplierId.HasValue)
+            {
+                await _paymentService.ReducePaymentFromBarangMasukAsync(entity.SupplierId.Value, entity.TanggalMasuk, oldSubtotal);
+            }
+
+            if (dto.SupplierId.HasValue)
+            {
+                await _paymentService.AddOrUpdatePaymentFromBarangMasukAsync(dto.SupplierId.Value, dto.TanggalMasuk, newSubtotal);
             }
 
             await _context.SaveChangesAsync();
@@ -218,11 +216,15 @@ namespace Atk.Services.Implementations
             var entity = await _context.BarangMasuks.FirstOrDefaultAsync(x => x.Id == id);
             if (entity == null) return false;
 
-            // rollback stok
+            var subtotal = entity.JumlahMasuk * entity.HargaSatuan;
+
             var barang = await _context.Barangs.FindAsync(entity.BarangId);
             if (barang != null)
-            {
                 barang.Stok -= entity.JumlahMasuk;
+
+            if (entity.SupplierId.HasValue)
+            {
+                await _paymentService.ReducePaymentFromBarangMasukAsync(entity.SupplierId.Value, entity.TanggalMasuk, subtotal);
             }
 
             _context.BarangMasuks.Remove(entity);

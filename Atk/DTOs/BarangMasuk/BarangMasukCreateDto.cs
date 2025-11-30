@@ -8,12 +8,14 @@ namespace Atk.DTOs.BarangMasuk
         [Required]
         public int BarangId { get; set; }
 
-        public int? SupplierId { get; set; }
+        public int? SupplierId { get; set; } // nullable, sesuai service
 
         [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "JumlahMasuk harus lebih dari 0.")]
         public int JumlahMasuk { get; set; }
 
         [Required]
+        [Range(0.01, double.MaxValue, ErrorMessage = "HargaSatuan harus lebih dari 0.")]
         public decimal HargaSatuan { get; set; }
 
         [Required]

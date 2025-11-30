@@ -6,14 +6,63 @@ using Atk.Services.Interfaces;
 using Atk.Services.Implementations;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Atk.Services;
+using Microsoft.OpenApi.Models; // WAJIB untuk Swagger
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Tambahkan OpenAPI (.NET 8/9/10)
-builder.Services.AddOpenApi();
+// ===============================
+// Controllers & JSON
+// ===============================
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.MaxDepth = 64;
+    });
 
-builder.Services.AddControllers();
+// ===============================
+// Swagger (Swashbuckle)
+// ===============================
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "ATK API",
+        Version = "v1",
+        Description = "API Sistem Informasi Pengadaan & Pengolahan ATK"
+    });
+
+    // JWT Support
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Masukkan token seperti ini: Bearer {token}",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 // ===============================
 // Database
@@ -27,7 +76,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // ===============================
 builder.Services.AddRateLimiter(options =>
 {
-    // Supplier Bulk Limit (sudah ada)
     options.AddFixedWindowLimiter("supplier_bulk_limit", opt =>
     {
         opt.Window = TimeSpan.FromSeconds(10);
@@ -35,14 +83,26 @@ builder.Services.AddRateLimiter(options =>
         opt.QueueLimit = 0;
     });
 
-    // Pengadaan Bulk Limit (TAMBAHAN)
     options.AddPolicy("pengadaan_bulk_limit", context =>
         RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
-            factory: key => new FixedWindowRateLimiterOptions
+            context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            key => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 5, // 5 request
-                Window = TimeSpan.FromMinutes(1), // per 1 menit
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+            }
+        )
+    );
+
+    options.AddPolicy("barang_bulk_limit", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            key => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromSeconds(30),
                 QueueLimit = 0,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst
             }
@@ -51,39 +111,78 @@ builder.Services.AddRateLimiter(options =>
 });
 
 // ===============================
-// Dependency Injection Services
+// Services
 // ===============================
 builder.Services.AddScoped<ISupplierServices, SupplierService>();
 builder.Services.AddScoped<IBarang, BarangService>();
 builder.Services.AddScoped<IPengadaan, PengadaanService>();
-
-// Tambahkan untuk BarangMasuk (TAMBAHAN)
 builder.Services.AddScoped<IBarangMasuk, BarangMasukService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IDivisi, DivisiService>();
+builder.Services.AddScoped<IPayment, PaymentService>();
+builder.Services.AddScoped<IBarangKeluar, BarangKeluarService>();
+builder.Services.AddScoped<IPermintaanBarang, PermintaanBarangService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAdminDashboard, AdminDashboardService>();
+
+// ===============================
+// JWT Authentication
+// ===============================
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "YourSuperSecretKey123!";
+
+var key = Encoding.ASCII.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+});
+
+builder.Services.AddAuthorization();
+
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 var app = builder.Build();
 
 // ===============================
-// Development Mode OpenAPI
+// Swagger UI
 // ===============================
 if (app.Environment.IsDevelopment())
 {
-    // JSON OpenAPI
-    app.MapOpenApi();
-
-    app.MapControllers();
-
-    // Swagger UI
-    app.UseSwaggerUI(options =>
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "API Documentation V1");
-        options.RoutePrefix = "swagger";
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ATK API V1");
+        c.RoutePrefix = "swagger"; // URL = /swagger/index.html
     });
 }
 
-// Aktifkan RateLimiter Middleware
+// ===============================
+// Middleware
+// ===============================
 app.UseRateLimiter();
+app.UseSession();
+app.UseAuthentication();
+app.UseAuthorization();
 
-// Routing
 app.MapControllers();
 
 app.Run();
