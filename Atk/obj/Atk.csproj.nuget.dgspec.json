@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\Alat Tulis Kantor\\Atk\\Atk.csproj": {}
+    "E:\\Alat Tulis Kantor\\atk\\Atk.csproj": {}
   },
   "projects": {
-    "E:\\Alat Tulis Kantor\\Atk\\Atk.csproj": {
+    "E:\\Alat Tulis Kantor\\atk\\Atk.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\Alat Tulis Kantor\\Atk\\Atk.csproj",
+        "projectUniqueName": "E:\\Alat Tulis Kantor\\atk\\Atk.csproj",
         "projectName": "Atk",
-        "projectPath": "E:\\Alat Tulis Kantor\\Atk\\Atk.csproj",
+        "projectPath": "E:\\Alat Tulis Kantor\\atk\\Atk.csproj",
         "packagesPath": "C:\\Users\\NITRO 5\\.nuget\\packages\\",
-        "outputPath": "E:\\Alat Tulis Kantor\\Atk\\obj\\",
+        "outputPath": "E:\\Alat Tulis Kantor\\atk\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
