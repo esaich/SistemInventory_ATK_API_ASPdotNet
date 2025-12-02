@@ -5,5 +5,5 @@ obj/
 appsettings.Development.json
 appsettings.Local.json
 appsettings.*.Secrets.json
-appsettings.json
+appsetting.json
 
