@@ -2,5 +2,8 @@
 bin/
 obj/
 
-appsetting.json
-appsetting.Development.json
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.Secrets.json
+appsettings.json
+
