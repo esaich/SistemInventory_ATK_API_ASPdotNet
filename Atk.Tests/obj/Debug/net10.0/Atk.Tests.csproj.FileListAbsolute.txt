@@ -4,8 +4,6 @@ E:\Alat Tulis Kantor\Atk.Tests\bin\Debug\net10.0\testhost.dll
 E:\Alat Tulis Kantor\Atk.Tests\bin\Debug\net10.0\xunit.abstractions.dll
 E:\Alat Tulis Kantor\Atk.Tests\bin\Debug\net10.0\Atk.deps.json
 E:\Alat Tulis Kantor\Atk.Tests\bin\Debug\net10.0\Atk.runtimeconfig.json
-E:\Alat Tulis Kantor\Atk.Tests\bin\Debug\net10.0\appsettings.Development.json
-E:\Alat Tulis Kantor\Atk.Tests\bin\Debug\net10.0\appsettings.json
 E:\Alat Tulis Kantor\Atk.Tests\bin\Debug\net10.0\Atk.staticwebassets.endpoints.json
 E:\Alat Tulis Kantor\Atk.Tests\bin\Debug\net10.0\Atk.exe
 E:\Alat Tulis Kantor\Atk.Tests\bin\Debug\net10.0\testhost.exe
@@ -173,3 +171,6 @@ E:\Alat Tulis Kantor\Atk.Tests\obj\Debug\net10.0\Atk.Tests.pdb
 E:\Alat Tulis Kantor\Atk.Tests\obj\Debug\net10.0\Atk.Tests.genruntimeconfig.cache
 E:\Alat Tulis Kantor\Atk.Tests\obj\Debug\net10.0\ref\Atk.Tests.dll
 E:\Alat Tulis Kantor\Atk.Tests\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.InMemory.dll
+E:\Alat Tulis Kantor\Atk.Tests\bin\Debug\net10.0\appsetting.Development.json
+E:\Alat Tulis Kantor\Atk.Tests\bin\Debug\net10.0\appsetting.example.json
+E:\Alat Tulis Kantor\Atk.Tests\bin\Debug\net10.0\appsetting.json
