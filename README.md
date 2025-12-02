@@ -105,13 +105,13 @@ dotnet run
 API akan berjalan di:
 
 ```
-http://localhost:5046
+http://localhost:5034
 ```
 
 Swagger UI:
 
 ```
-http://localhost:5046/swagger
+http://localhost:5034/swagger
 ```
 
 ---
