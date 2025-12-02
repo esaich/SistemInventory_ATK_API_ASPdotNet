@@ -95,7 +95,7 @@ namespace Atk.Controllers
             return Ok(update);
         }
 
-        [HttpDelete]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             var delete = await _service.DeleteAsync(id);

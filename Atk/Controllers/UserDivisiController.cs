@@ -55,7 +55,7 @@ namespace Atk.Controllers
             return Ok(new{ message = "User Berhasil Di Update" });
         }
 
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var del = await _service.DeleteAsync(id);

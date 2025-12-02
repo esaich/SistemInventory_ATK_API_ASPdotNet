@@ -24,6 +24,7 @@ namespace Atk.Controllers
             _service = service;
         }
 
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -88,8 +89,9 @@ namespace Atk.Controllers
             return Ok(upt);
         }
 
-        [HttpDelete]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
+
         {
             var del = await _service.DeleteAsync(id);
             if (!del)
