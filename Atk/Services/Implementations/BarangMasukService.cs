@@ -14,11 +14,17 @@ namespace Atk.Services.Implementations
     {
         private readonly ApplicationDbContext _context;
         private readonly IPayment _paymentService; // dependency PaymentService
+        private object context;
 
         public BarangMasukService(ApplicationDbContext context, IPayment paymentService)
         {
             _context = context;
             _paymentService = paymentService;
+        }
+
+        public BarangMasukService(object context)
+        {
+            this.context = context;
         }
 
         public async Task<BarangMasukResponseDto> CreateAsync(BarangMasukCreateDto dto)
