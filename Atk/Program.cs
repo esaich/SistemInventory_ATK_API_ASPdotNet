@@ -24,6 +24,20 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.MaxDepth = 64;
     });
 
+// =================
+// Add React cuy
+// =================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // Port Vite default
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 // ===============================
 // Swagger (Swashbuckle)
 // ===============================
@@ -137,6 +151,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
+
 .AddJwtBearer(options =>
 {
     options.RequireHttpsMetadata = false;
@@ -148,6 +163,31 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+
+    // ✅ BACA TOKEN DARI COOKIE
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            // Cek cookie dulu
+            if (context.Request.Cookies.ContainsKey("AuthToken"))
+            {
+                context.Token = context.Request.Cookies["AuthToken"];
+            }
+            
+            // Fallback ke Authorization header (untuk Swagger testing)
+            if (string.IsNullOrEmpty(context.Token))
+            {
+                var authHeader = context.Request.Headers["Authorization"].ToString();
+                if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Token = authHeader.Substring("Bearer ".Length).Trim();
+                }
+            }
+
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -178,6 +218,8 @@ if (app.Environment.IsDevelopment())
 // ===============================
 // Middleware
 // ===============================
+// disini juga add react nya jangan lupa
+app.UseCors("AllowReactApp");
 app.UseRateLimiter();
 app.UseSession();
 app.UseAuthentication();

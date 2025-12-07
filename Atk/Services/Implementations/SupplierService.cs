@@ -84,6 +84,7 @@ namespace Atk.Services.Interfaces
                 NamaSupplier = s.namaSupplier,
                 Alamat = s.Alamat,
                 Telepon = s.Telepon,
+                Email = s.Email,
                 CreatedAt = s.CreatedAt,
             });
 
