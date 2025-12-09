@@ -9,6 +9,7 @@ namespace Atk.Services
     {
         private readonly ApplicationDbContext _context;
 
+
         public BarangKeluarService(ApplicationDbContext context)
         {
             _context = context;

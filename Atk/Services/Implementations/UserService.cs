@@ -75,27 +75,8 @@ namespace Atk.Services.Implementations
                 return false;
 
             _context.Users.Remove(user);
-
-            try
-            {
-                // ✅ Tambahkan try-catch di sini
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch (DbUpdateException ex)
-            {
-                // Ini menangkap error database (seperti Foreign Key Constraint)
-                // Sebaiknya log exception 'ex' di server Anda (tidak ditampilkan di sini)
-                
-                // Jika user yang dihapus memiliki relasi data di tabel lain
-                // Maka operasi hapus gagal. Kita kembalikan 'false'.
-                return false; 
-            }
-            catch (Exception)
-            {
-                // Menangkap error umum lainnya
-                return false;
-            }
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
     
