@@ -9,48 +9,51 @@ namespace Atk.Services
     {
         private readonly ApplicationDbContext _context;
 
-
         public BarangKeluarService(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // Ambil semua data barang keluar
+        // ✅ TAMBAHKAN .ThenInclude(p => p.User)
         public async Task<List<BarangKeluar>> GetAllAsync()
         {
             return await _context.BarangKeluars
                 .Include(x => x.Barang)
                 .Include(x => x.PermintaanBarang)
+                    .ThenInclude(p => p.User)  // ✅ TAMBAH BARIS INI!
                 .OrderByDescending(x => x.TanggalKeluar)
                 .ToListAsync();
         }
 
-        // Ambil berdasarkan Id
+        // ✅ TAMBAHKAN JUGA DI SINI
         public async Task<BarangKeluar?> GetByIdAsync(int id)
         {
             return await _context.BarangKeluars
                 .Include(x => x.Barang)
                 .Include(x => x.PermintaanBarang)
+                    .ThenInclude(p => p.User)  // ✅ TAMBAH BARIS INI!
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        // Ambil berdasarkan permintaan
+        // ✅ TAMBAHKAN JUGA DI SINI
         public async Task<List<BarangKeluar>> GetByPermintaanAsync(int permintaanId)
         {
             return await _context.BarangKeluars
                 .Where(x => x.PermintaanId == permintaanId)
                 .Include(x => x.Barang)
                 .Include(x => x.PermintaanBarang)
+                    .ThenInclude(p => p.User)  // ✅ TAMBAH BARIS INI!
                 .ToListAsync();
         }
 
-        // Ambil berdasarkan barang tertentu
+        // ✅ TAMBAHKAN JUGA DI SINI
         public async Task<List<BarangKeluar>> GetByBarangAsync(int barangId)
         {
             return await _context.BarangKeluars
                 .Where(x => x.BarangId == barangId)
                 .Include(x => x.Barang)
                 .Include(x => x.PermintaanBarang)
+                    .ThenInclude(p => p.User)  // ✅ TAMBAH BARIS INI!
                 .ToListAsync();
         }
     }

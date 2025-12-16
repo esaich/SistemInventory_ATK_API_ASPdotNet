@@ -16,3 +16,4 @@ namespace Atk.Models
         public ICollection<User> Users { get; set; }
     }
 }
+

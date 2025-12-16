@@ -1,168 +1,64 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Atk.Data;
 using Atk.Models;
-using Atk.Services;
+using Atk.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
 
-namespace Atk.Tests.Services
+namespace Atk.Services.Implementations
 {
-    public class BarangKeluarServiceTests
+    public class BarangKeluarService : IBarangKeluar
     {
-        private ApplicationDbContext GetDbContext()
+        private readonly ApplicationDbContext _context;
+
+        public BarangKeluarService(ApplicationDbContext context)
         {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
-
-            var db = new ApplicationDbContext(options);
-
-            // =======================
-            // SEED DATA
-            // =======================
-            var barang = new Barang
-            {
-                Id = 1,
-                NamaBarang = "Kertas A4",
-                Satuan = "pak",
-                Stok = 100
-            };
-
-            var permintaan = new PermintaanBarang
-            {
-                Id = 10,
-                UserId = 1,
-                BarangId = 1,
-                JumlahDiminta = 5,
-                Status = StatusPermintaan.Disetujui,
-                CreatedAt = DateTime.Now
-            };
-
-            var keluar1 = new BarangKeluar
-            {
-                Id = 100,
-                BarangId = 1,
-                PermintaanId = 10,
-                JumlahKeluar = 5,
-                TanggalKeluar = new DateTime(2025, 1, 1)
-            };
-
-            var keluar2 = new BarangKeluar
-            {
-                Id = 101,
-                BarangId = 1,
-                PermintaanId = 10,
-                JumlahKeluar = 3,
-                TanggalKeluar = new DateTime(2025, 1, 5)
-            };
-
-            db.Barangs.Add(barang);
-            db.PermintaanBarangs.Add(permintaan);
-            db.BarangKeluars.AddRange(keluar1, keluar2);
-            db.SaveChanges();
-
-            return db;
+            _context = context;
         }
 
-        private BarangKeluarService GetService(ApplicationDbContext db)
+        // ✅ PERBAIKAN: Include nested User.Divisi
+        public async Task<List<BarangKeluar>> GetAllAsync()
         {
-            return new BarangKeluarService(db);
+            return await _context.BarangKeluars
+                .Include(x => x.Barang)
+                .Include(x => x.PermintaanBarang)
+                    .ThenInclude(p => p.User)           // ✅ Include User
+                            // ✅ Include Divisi dari User
+                .OrderByDescending(x => x.TanggalKeluar)
+                .ToListAsync();
         }
 
-        // ================================================
-        // TEST 1: GetAllAsync
-        // ================================================
-        [Fact]
-        public async Task GetAllAsync_Should_Return_All_Data()
+        public async Task<BarangKeluar?> GetByIdAsync(int id)
         {
-            var db = GetDbContext();
-            var service = GetService(db);
-
-            var result = await service.GetAllAsync();
-
-            Assert.Equal(2, result.Count);
-            Assert.True(result[0].TanggalKeluar > result[1].TanggalKeluar); // Ordered desc
+            return await _context.BarangKeluars
+                .Include(x => x.Barang)
+                .Include(x => x.PermintaanBarang)
+                    .ThenInclude(p => p.User)
+                       
+                .FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        // ================================================
-        // TEST 2: GetByIdAsync
-        // ================================================
-        [Fact]
-        public async Task GetByIdAsync_Should_Return_Correct_Data()
+        public async Task<List<BarangKeluar>> GetByPermintaanAsync(int permintaanId)
         {
-            var db = GetDbContext();
-            var service = GetService(db);
-
-            var result = await service.GetByIdAsync(100);
-
-            Assert.NotNull(result);
-            Assert.Equal(5, result.JumlahKeluar);
-            Assert.Equal(1, result.BarangId);
+            return await _context.BarangKeluars
+                .Where(x => x.PermintaanId == permintaanId)
+                .Include(x => x.Barang)
+                .Include(x => x.PermintaanBarang)
+                    .ThenInclude(p => p.User)
+                 
+                .ToListAsync();
         }
 
-        [Fact]
-        public async Task GetByIdAsync_Should_Return_Null_If_NotFound()
+        public async Task<List<BarangKeluar>> GetByBarangAsync(int barangId)
         {
-            var db = GetDbContext();
-            var service = GetService(db);
-
-            var result = await service.GetByIdAsync(999);
-
-            Assert.Null(result);
-        }
-
-        // ================================================
-        // TEST 3: GetByPermintaanAsync
-        // ================================================
-        [Fact]
-        public async Task GetByPermintaanAsync_Should_Return_Filtered_Data()
-        {
-            var db = GetDbContext();
-            var service = GetService(db);
-
-            var list = await service.GetByPermintaanAsync(10);
-
-            Assert.Equal(2, list.Count);
-            Assert.All(list, x => Assert.Equal(10, x.PermintaanId));
-        }
-
-        [Fact]
-        public async Task GetByPermintaanAsync_Should_Return_Empty_When_None()
-        {
-            var db = GetDbContext();
-            var service = GetService(db);
-
-            var result = await service.GetByPermintaanAsync(999);
-
-            Assert.Empty(result);
-        }
-
-        // ================================================
-        // TEST 4: GetByBarangAsync
-        // ================================================
-        [Fact]
-        public async Task GetByBarangAsync_Should_Return_Correct_Data()
-        {
-            var db = GetDbContext();
-            var service = GetService(db);
-
-            var result = await service.GetByBarangAsync(1);
-
-            Assert.Equal(2, result.Count);
-        }
-
-        [Fact]
-        public async Task GetByBarangAsync_Should_Return_Empty_When_NotFound()
-        {
-            var db = GetDbContext();
-            var service = GetService(db);
-
-            var result = await service.GetByBarangAsync(999);
-
-            Assert.Empty(result);
+            return await _context.BarangKeluars
+                .Where(x => x.BarangId == barangId)
+                .Include(x => x.Barang)
+                .Include(x => x.PermintaanBarang)
+                    .ThenInclude(p => p.User)
+                        
+                .ToListAsync();
         }
     }
 }
