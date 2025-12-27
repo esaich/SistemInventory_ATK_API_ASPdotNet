@@ -24,7 +24,7 @@ namespace Atk.Services
                 .OrderByDescending(x => x.TanggalKeluar)
                 .ToListAsync();
         }
-
+    
         // ✅ TAMBAHKAN JUGA DI SINI
         public async Task<BarangKeluar?> GetByIdAsync(int id)
         {

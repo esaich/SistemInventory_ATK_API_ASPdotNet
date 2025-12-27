@@ -26,7 +26,12 @@ namespace Atk.Controllers
         public async Task<IActionResult> GetAll()
         {
             var data = await _service.GetAllAsync();
-            return Ok(data);
+            return Ok(new
+            {
+                message = "Berhasil mengambil data barang masuk",
+                statusCode = 200,
+                data
+            });
         }
 
         // GET BY ID
@@ -36,9 +41,19 @@ namespace Atk.Controllers
             var data = await _service.GetByIdAsync(id);
 
             if (data == null)
-                return NotFound(new { message = "Data Barang Masuk tidak ditemukan" });
+                return NotFound(new
+                {
+                    message = "Data Barang Masuk tidak ditemukan",
+                    statusCode = 404,
+                    data = (object)null
+                });
 
-            return Ok(data);
+            return Ok(new
+            {
+                message = "Berhasil mengambil data barang masuk",
+                statusCode = 200,
+                data
+            });
         }
 
         // CREATE (single insert)
@@ -46,20 +61,40 @@ namespace Atk.Controllers
         public async Task<IActionResult> Create([FromBody] BarangMasukCreateDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(new
+                {
+                    message = "Data tidak valid",
+                    statusCode = 400,
+                    data = ModelState
+                });
 
             try
             {
                 var created = await _service.CreateAsync(dto);
-                return Ok(created);
+                return Ok(new
+                {
+                    message = "Berhasil menambahkan barang masuk",
+                    statusCode = 200,
+                    data = created
+                });
             }
             catch (KeyNotFoundException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message,
+                    statusCode = 400,
+                    data = (object)null
+                });
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message,
+                    statusCode = 400,
+                    data = (object)null
+                });
             }
         }
 
@@ -69,20 +104,40 @@ namespace Atk.Controllers
         public async Task<IActionResult> CreateBulk([FromBody] List<BarangMasukCreateDto> dtos)
         {
             if (dtos == null || dtos.Count == 0)
-                return BadRequest(new { message = "Data tidak boleh kosong" });
+                return BadRequest(new
+                {
+                    message = "Data tidak boleh kosong",
+                    statusCode = 400,
+                    data = (object)null
+                });
 
             try
             {
                 var created = await _service.CreateBulkAsync(dtos);
-                return Ok(created);
+                return Ok(new
+                {
+                    message = "Berhasil menambahkan barang masuk secara bulk",
+                    statusCode = 200,
+                    data = created
+                });
             }
             catch (KeyNotFoundException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message,
+                    statusCode = 400,
+                    data = (object)null
+                });
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    message = ex.Message,
+                    statusCode = 400,
+                    data = (object)null
+                });
             }
         }
 
@@ -91,14 +146,29 @@ namespace Atk.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] BarangMasukUpdateDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(new
+                {
+                    message = "Data tidak valid",
+                    statusCode = 400,
+                    data = ModelState
+                });
 
             var result = await _service.UpdateAsync(id, dto);
 
             if (!result)
-                return NotFound(new { message = "Data tidak ditemukan atau gagal diperbarui" });
+                return NotFound(new
+                {
+                    message = "Data tidak ditemukan atau gagal diperbarui",
+                    statusCode = 404,
+                    data = (object)null
+                });
 
-            return Ok(new { message = "Update berhasil" });
+            return Ok(new
+            {
+                message = "Update berhasil",
+                statusCode = 200,
+                data = (object)null
+            });
         }
 
         // DELETE
@@ -108,9 +178,19 @@ namespace Atk.Controllers
             var result = await _service.DeleteAsync(id);
 
             if (!result)
-                return NotFound(new { message = "Data tidak ditemukan" });
+                return NotFound(new
+                {
+                    message = "Data tidak ditemukan",
+                    statusCode = 404,
+                    data = (object)null
+                });
 
-            return Ok(new { message = "Data berhasil dihapus" });
+            return Ok(new
+            {
+                message = "Data berhasil dihapus",
+                statusCode = 200,
+                data = (object)null
+            });
         }
     }
 }

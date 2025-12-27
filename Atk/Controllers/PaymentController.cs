@@ -16,6 +16,7 @@ namespace Atk.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly IPayment _service;
+        
         public PaymentController(IPayment service)
         {
             _service = service;
@@ -25,7 +26,12 @@ namespace Atk.Controllers
         public async Task<IActionResult> GetAll()
         {
             var data = await _service.GetAllAsync();
-            return Ok(data);
+            return Ok(new
+            {
+                message = "Berhasil mengambil data payment",
+                statusCode = 200,
+                data
+            });
         }
 
         [HttpGet("{id}")]
@@ -34,10 +40,20 @@ namespace Atk.Controllers
             var getId = await _service.GetByIdAsync(id);
             if (getId == null)
             {
-                return NotFound(new {message = "Data Payment Tidak Ditemukan"});
+                return NotFound(new
+                {
+                    message = "Data Payment Tidak Ditemukan",
+                    statusCode = 404,
+                    data = (object)null
+                });
             }
 
-            return Ok(getId);
+            return Ok(new
+            {
+                message = "Berhasil mengambil data payment",
+                statusCode = 200,
+                data = getId
+            });
         }
 
         [HttpPost]
@@ -53,7 +69,12 @@ namespace Atk.Controllers
             };
 
             var result = await _service.CreateAsync(payment);
-            return Ok(result);
+            return Ok(new
+            {
+                message = "Berhasil menambahkan payment",
+                statusCode = 200,
+                data = result
+            });
         }
 
         [HttpPut("{id}/status")] 
@@ -61,28 +82,59 @@ namespace Atk.Controllers
         { 
             var success = await _service.UpdateStatusAsync(id, dto.Status); 
             if (!success) 
-                return NotFound(new { message = "Data Payment Tidak Ditemukan" }); 
+                return NotFound(new
+                {
+                    message = "Data Payment Tidak Ditemukan",
+                    statusCode = 404,
+                    data = (object)null
+                }); 
 
-            return Ok(new { message = "Status Payment Berhasil Diupdate" }); 
+            return Ok(new
+            {
+                message = "Status Payment Berhasil Diupdate",
+                statusCode = 200,
+                data = (object)null
+            }); 
         }
 
         [HttpPost("{id}/upload-bukti")] 
         public async Task<IActionResult> UploadBuktiTransfer(int id, [FromBody] PaymentUploadBuktiDto dto) 
         { 
             var success = await _service.UploadBuktiTransferAsync(id, dto.FilePath); 
-            if (!success) return NotFound(new { message = "Data Payment Tidak Ditemukan" }); 
-                return Ok(new 
-                { 
-                    message = "Bukti Transfer Berhasil Diunggah" 
+            if (!success)
+                return NotFound(new
+                {
+                    message = "Data Payment Tidak Ditemukan",
+                    statusCode = 404,
+                    data = (object)null
                 }); 
+            
+            return Ok(new 
+            { 
+                message = "Bukti Transfer Berhasil Diunggah",
+                statusCode = 200,
+                data = (object)null
+            }); 
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         { 
             var success = await _service.DeleteAsync(id); 
-            if (!success) return NotFound(new { message = "Data Payment Tidak Ditemukan" }); 
+            if (!success)
+                return NotFound(new
+                {
+                    message = "Data Payment Tidak Ditemukan",
+                    statusCode = 404,
+                    data = (object)null
+                }); 
             
-            return Ok(new { message = "Payment Berhasil Dihapus" }); }
+            return Ok(new
+            {
+                message = "Payment Berhasil Dihapus",
+                statusCode = 200,
+                data = (object)null
+            }); 
+        }
     }
 }

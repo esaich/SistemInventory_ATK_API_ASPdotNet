@@ -10,10 +10,10 @@ namespace Atk.Models
     {
         [Key]
         public int Id { get; set; }
-        public string Nama { get; set; }
+        public string? Nama { get; set; }
 
         // Relasi ke User
-        public ICollection<User> Users { get; set; }
+        public ICollection<User> Users { get; set; } 
     }
 }
 

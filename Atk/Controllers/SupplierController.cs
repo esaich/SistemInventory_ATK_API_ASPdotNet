@@ -29,7 +29,12 @@ namespace Atk.Controllers
         public async Task<IActionResult> GetAll()
         {
             var data = await _service.GetAllAsync();
-            return Ok(data);
+            return Ok(new
+            {
+                message = "Berhasil mengambil data supplier",
+                statusCode = 200,
+                data
+            });
         }
 
         [HttpGet("{id:int}")]
@@ -39,9 +44,20 @@ namespace Atk.Controllers
 
             if (supplier == null)
             {
-                return NotFound(new{ message = "Supplier Tidak ditemukan" });
+                return NotFound(new
+                {
+                    message = "Supplier tidak ditemukan",
+                    statusCode = 404,
+                    data = (object)null
+                });
             }
-            return Ok(supplier);
+
+            return Ok(new
+            {
+                message = "Berhasil mengambil data supplier",
+                statusCode = 200,
+                data = supplier
+            });
         }
 
         [EnableRateLimiting("supplier_bulk_limit")]
@@ -52,14 +68,24 @@ namespace Atk.Controllers
 
             if ((now - _lastRequestTime).TotalMilliseconds < 500) // <0.5 detik?
             {
-                return StatusCode(429, new { message = "Terlalu cepat, coba lagi." });
+                return StatusCode(429, new
+                {
+                    message = "Terlalu cepat, coba lagi",
+                    statusCode = 429,
+                    data = (object)null
+                });
             }
 
             _lastRequestTime = now;
 
             if (dtos == null || dtos.Count == 0)
             {
-                return BadRequest(new { message = "Data supplier tidak boleh kosong" });
+                return BadRequest(new
+                {
+                    message = "Data supplier tidak boleh kosong",
+                    statusCode = 400,
+                    data = (object)null
+                });
             }
 
             var result = new List<SupplierResponseDto>();
@@ -69,30 +95,47 @@ namespace Atk.Controllers
                 // validasi duplikat
                 if (await _service.ExistsByName(dto.NamaSupplier))
                 {
-                    return BadRequest(new {message = $"{dto.NamaSupplier } sudah ada "});
+                    return BadRequest(new
+                    {
+                        message = $"{dto.NamaSupplier} sudah ada",
+                        statusCode = 400,
+                        data = (object)null
+                    });
                 }
+
                 var newSupplier = await _service.CreateAsync(dto);
-                
                 result.Add(newSupplier);
             }
 
-            return Ok(result);
+            return Ok(new
+            {
+                message = "Berhasil menambahkan supplier secara bulk",
+                statusCode = 200,
+                data = result
+            });
         }
 
-
-
         [HttpPut("{id:int}")]
-
-        public async Task<IActionResult> Update(int id, [FromBody] SupplierUpdateDto dto )
+        public async Task<IActionResult> Update(int id, [FromBody] SupplierUpdateDto dto)
         {
             var update = await _service.UpdateAsync(id, dto);
 
             if (update == null)
             {
-                return NotFound(new {message = "Supplier Tidak Ditemukan"});
+                return NotFound(new
+                {
+                    message = "Supplier tidak ditemukan",
+                    statusCode = 404,
+                    data = (object)null
+                });
             }
 
-            return Ok(update);
+            return Ok(new
+            {
+                message = "Berhasil mengupdate supplier",
+                statusCode = 200,
+                data = update
+            });
         }
 
         [HttpDelete("{id:int}")]
@@ -102,10 +145,20 @@ namespace Atk.Controllers
 
             if (!delete)
             {
-                return NotFound(new {message = "Supplier Tidak Ditemukan"});
+                return NotFound(new
+                {
+                    message = "Supplier tidak ditemukan",
+                    statusCode = 404,
+                    data = (object)null
+                });
             }
-            return Ok(delete);
+
+            return Ok(new
+            {
+                message = "Berhasil menghapus supplier",
+                statusCode = 200,
+                data = (object)null
+            });
         }
     }
-    
 }

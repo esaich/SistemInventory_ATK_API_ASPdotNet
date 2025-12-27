@@ -25,7 +25,12 @@ namespace Atk.Controllers
         public async Task<IActionResult> GetAll()
         {
             var data = await _service.GetAllAsync();
-            return Ok(data);
+            return Ok(new
+            {
+                message = "Berhasil mengambil data barang",
+                statusCode = 200,
+                data
+            });
         }
 
         // ================================
@@ -37,10 +42,20 @@ namespace Atk.Controllers
             var barang = await _service.GetByIdAsync(id);
             if (barang == null)
             {
-                return NotFound(new { message = "ID tidak ditemukan" });
+                return NotFound(new
+                {
+                    message = "ID tidak ditemukan",
+                    statusCode = 404,
+                    data = (object)null
+                });
             }
 
-            return Ok(barang);
+            return Ok(new
+            {
+                message = "Berhasil mengambil data barang",
+                statusCode = 200,
+                data = barang
+            });
         }
 
         // ================================
@@ -53,7 +68,12 @@ namespace Atk.Controllers
         {
             if (dtos == null || dtos.Count == 0)
             {
-                return BadRequest(new { message = "Data barang tidak boleh kosong" });
+                return BadRequest(new
+                {
+                    message = "Data barang tidak boleh kosong",
+                    statusCode = 400,
+                    data = (object)null
+                });
             }
 
             var result = new List<BarangResponseDto>();
@@ -62,14 +82,24 @@ namespace Atk.Controllers
             {
                 if (await _service.ExistsByName(dto.NamaBarang))
                 {
-                    return BadRequest(new { message = $"{dto.NamaBarang} sudah ada" });
+                    return BadRequest(new
+                    {
+                        message = $"{dto.NamaBarang} sudah ada",
+                        statusCode = 400,
+                        data = (object)null
+                    });
                 }
 
                 var newBarang = await _service.CreateAsync(dto);
                 result.Add(newBarang);
             }
 
-            return Ok(result);
+            return Ok(new
+            {
+                message = "Berhasil menambahkan barang",
+                statusCode = 200,
+                data = result
+            });
         }
 
         // ================================
@@ -82,10 +112,20 @@ namespace Atk.Controllers
             var updated = await _service.UpdateAsync(id, dto);
             if (updated == null)
             {
-                return NotFound(new { message = "Barang tidak ditemukan" });
+                return NotFound(new
+                {
+                    message = "Barang tidak ditemukan",
+                    statusCode = 404,
+                    data = (object)null
+                });
             }
 
-            return Ok(updated);
+            return Ok(new
+            {
+                message = "Berhasil mengupdate barang",
+                statusCode = 200,
+                data = updated
+            });
         }
 
         // ================================
@@ -98,10 +138,20 @@ namespace Atk.Controllers
             var deleted = await _service.DeleteAsync(id);
             if (!deleted)
             {
-                return NotFound(new { message = "Data tidak ditemukan atau gagal dihapus" });
+                return NotFound(new
+                {
+                    message = "Data tidak ditemukan atau gagal dihapus",
+                    statusCode = 404,
+                    data = (object)null
+                });
             }
 
-            return Ok(new { message = "Berhasil dihapus" });
+            return Ok(new
+            {
+                message = "Berhasil dihapus",
+                statusCode = 200,
+                data = (object)null
+            });
         }
     }
 }

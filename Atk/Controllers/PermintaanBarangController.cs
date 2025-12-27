@@ -30,7 +30,12 @@ namespace Atk.Controllers
 
             var permintaan = await _service.CreateAsync(dto, userId);
 
-            return Ok(permintaan);
+            return Ok(new
+            {
+                message = "Berhasil membuat permintaan barang",
+                statusCode = 200,
+                data = permintaan
+            });
         }
 
         // ====================================================
@@ -57,7 +62,12 @@ namespace Atk.Controllers
                 list = await _service.GetAllAsync(status);
             }
 
-            return Ok(list);
+            return Ok(new
+            {
+                message = "Berhasil mengambil data permintaan barang",
+                statusCode = 200,
+                data = list
+            });
         }
 
         // ====================================================
@@ -71,13 +81,23 @@ namespace Atk.Controllers
             var success = await _service.UpdateStatusAsync(id, dto);
 
             if (!success)
-                return NotFound(new { message = "Permintaan barang tidak ditemukan" });
+                return NotFound(new
+                {
+                    message = "Permintaan barang tidak ditemukan",
+                    statusCode = 404,
+                    data = (object)null
+                });
 
             var msg = dto.Status == StatusPermintaan.Disetujui
                 ? "disetujui"
                 : "ditolak";
 
-            return Ok(new { message = $"Permintaan barang berhasil {msg}" });
+            return Ok(new
+            {
+                message = $"Permintaan barang berhasil {msg}",
+                statusCode = 200,
+                data = (object)null
+            });
         }
     }
 }
